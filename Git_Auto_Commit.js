@@ -60,7 +60,7 @@ function commit() {
 }
 
 function push() {
-  exec(`git push -u origin master`, (error, stdout, stderr) => {
+  exec(`git push -u origin main`, (error, stdout, stderr) => {
     if (error) {
       console.log(`error: ${error.message}`);
       return;
