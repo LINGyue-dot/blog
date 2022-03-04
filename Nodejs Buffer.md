@@ -1,4 +1,4 @@
-# Nodejs Buffer
+# Nodejs Buffer （缓冲区）
 
 
 
@@ -10,16 +10,19 @@ Buffer 用于处理大文件、网络二进制数据，存储字节，操作类�
 
 Buffer 大小不可变，所以 Buffer 拼接时候就是生成一个合并后的对象将原来的 buffer 复制到该对象中
 
-网络 IO 与文件 IO 时候都会将字符串转为 buffer ，以二进制数据传输
+网络 IO 与文件 IO 时候都会将字符串转为 buffer ，以二进制数据传输 `Buffer.concat`
 
 
+
+* Buffer
+* Blob ：表示一个二进制文件的数据内容，用于操作二进制文件，而 Buffer 用于操作内存
 
 ## 内存分配
 
 简单说，Buffer 内存都是 C++ 层面提供的，都不在 V8 的堆内存中
 
-* 较小的 <8K ：由 C++ 预申请后分配
-* 较大的 >8K ：由 C++ 层面与 OS 请求，直接使用 C++ 提供的内存即可
+* 较小的 <8K ：由 C++ 预申请后分配，存入到剩余内存池
+* 较大的 >8K ：由 C++ 层面与 OS 请求，直接使用 C++ 申请的内存即可
 
 
 
@@ -60,6 +63,22 @@ var rs = fs.createReadStream("data.md",{highWaterMark:11}); // 每个 chunk 是 
 
 
 
+
+## 几个常用函数
+
+* `Buffer.alloc(byteNumber)` 申请多少字节数的缓冲区
+* `Buffer.from(obj,encoding)` 创建一个缓冲区 
+* `Buffer.compare` 比较2个缓冲区是否相等返回 -1 0 1
+* `Buffer.slice()` 选取部分缓冲区创建一个新的缓冲区 
+* `Buffer.toJSON()` 
+
+
+
+## 总结
+
+* Buffer 大小不可变，是全局变量
+* JS 适合处理 Unicode 编码数据，对二进制数据处理不友好
+* 常见的编码有  `ascii` `utf-8` `gbk` `base64`
 
 
 
