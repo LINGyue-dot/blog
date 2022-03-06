@@ -86,6 +86,83 @@ await compose(stack)({});
 
 
 
+## 洋葱模型机制使用
+
+* 具体实现并不复杂
+* 可以利用中间件对用户的操作进行前置与后置处理
+
+
+
+## 手写 compose 函数
+
+
+
+```js
+// 实现洋葱模型
+function compose(middleArr) {
+	// middleArr 类型判断
+	return function (context, next) {
+		// begin from 0
+		dispath(0);
+		function dispath(i) {
+			let fn;
+			// i / fn 判断
+			// i == len 时候就是最后一个中间件执行
+			if (i == middleArr.length) {
+				fn = next;
+			} else {
+				fn = middleArr[i];
+			}
+			// 结束
+			if (!fn) {
+				return Promise.resolve();
+			}
+			try {
+				// 可以传入 Promise 也可以传入普通数组/字符串等数据
+                  // 这里的 dispatch 本质就是 next 函数，
+				return Promise.resolve(fn(context, dispath.bind(null, i + 1)));
+			} catch (e) {
+				return Promise.reject(e);
+			}
+		}
+	};
+}
+```
+
+测试
+
+```js
+const stack = [];
+
+function wait(delay) {
+	return new Promise(resolve =>
+		setTimeout(() => {
+			resolve();
+		}, delay)
+	);
+}
+
+stack.push(async (context, next) => {
+	console.log(1);
+	await wait(1);
+	await next();
+	await wait(1);
+	console.log(4);
+});
+
+stack.push(async (context, next) => {
+	console.log(2);
+	await wait(1);
+	await next();
+	await wait(1);
+	console.log(3);
+});
+
+compose(stack)({});
+```
+
+
+
 
 
 
