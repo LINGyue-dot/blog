@@ -62,6 +62,10 @@ var rs = fs.createReadStream("data.md",{highWaterMark:11}); // 每个 chunk 是 
 
 
 
+## 内存回收
+
+Buffer 本质是通过 CPP 中的 `ArrayBuffer` 对象关联到 JS 中使用的，所以他也存在 V8 的 heap 中，所以回收也是依靠 V8 GC 
+
 
 
 ## 几个常用函数
