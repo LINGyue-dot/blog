@@ -175,7 +175,9 @@ compose(stack)({});
 
 ## koa-router
 
+本质是注册传入的参数（`path` `regex path` `prefix`）、回调函数为 `Layer` 对象，放入路由实例的 `stack` 中，每当有请求过来就遍历 stack 看是否命中。
 
+只是在命中时候内部也有洋葱模型执行回调函数
 
 
 
