@@ -139,7 +139,93 @@ module.exports={ // 相当于赋值了一个全新的对象，将其默认的初
 
 
 
-## 总结
+
+
+## Commonjs 解决循环引用
+
+大型工程中2个模块互相引用就会造成循环引用，应该在编码阶段就避免这个问题
+
+Commonjs 的循环引用一般不会导致错误，但是会导致部分代码没有被执行
+
+例如如下
+
+```js
+// a.js
+console.log("a.js load");
+module.exports.done = false;
+// b require 时候不会执行下面 require
+const b = require("./b.js");
+console.log("b的完成情况", b.done);
+module.exports.done = true;
+
+// b.js
+console.log("b.js load");
+module.exports.done = false;
+const a = require("./a.js");
+console.log("a的完成情况", a.done);
+module.exports.done = true;
+
+// node a.js
+a.js load
+b.js load
+a的完成情况 false
+b的完成情况 true
+```
+
+模块引用时候都会分析自己的 `module` 对象下的 `parent`  ， b 的 `module` 如下
+
+```js
+<ref *1> Module {
+  id: 'E:\\classify\\HC\\b.js',
+  path: 'E:\\classify\\HC',
+  exports: { done: true },
+  parent: Module { // 父 moudule
+    id: '.',
+    path: 'E:\\classify\\HC',
+    exports: { done: false },
+    parent: null,
+    filename: 'E:\\classify\\HC\\a.js',
+    loaded: false,
+    children: [ [Circular *1] ],
+    paths: [
+      'E:\\classify\\HC\\node_modules',
+      'E:\\classify\\node_modules',
+      'E:\\node_modules'
+    ]
+  },
+  filename: 'E:\\classify\\HC\\b.js',
+  loaded: false,
+  children: [
+    Module {
+      id: '.',
+      path: 'E:\\classify\\HC',
+      exports: [Object],
+      parent: null,
+      filename: 'E:\\classify\\HC\\a.js',
+      loaded: false,
+      children: [Array],
+      paths: [Array]
+    }
+  ],
+  paths: [
+    'E:\\classify\\HC\\node_modules',
+    'E:\\classify\\node_modules',
+    'E:\\node_modules'
+  ]
+}
+```
+
+
+
+即
+
+`require` 时候会加载模块并执行，在每个模块 `require` 时候会去检查 `module` 中的  `parent` 与当前 `require` 是否存在循环调用关系，如果存在，由于缓存则不会再执行。如果有引用的值只会引用父模块中引用自身的之前值。就如上方 `a.js` `module.exports.done = false;` 
+
+
+
+
+
+## Commonjs 总结
 
 require 的模块加载机制
 
@@ -148,7 +234,32 @@ require 的模块加载机制
    1. 核心模块 `fs` 等 Node 自带的模块，这些模块已经被编译成二进制文件，所以执行时候直接加载到内存
    2. 路径 `require('./')` ，将路径转为绝对路径，查找很快但是需要编译
    3. 自定义 `node_modules` 文件，就需要不断递归根据 `module.paths` 进行递归查找
-3. 输出模块的 `exports` 属性，同时将其添加到缓存中
+3. 输出模块的 `exports` 属性并执行模块，同时将其添加到缓存中
+
+
+
+## ESM 循环引用
+
+```js
+/*a.js*/
+import { count } from './b.js'
+console.log(count);
+export let message = 'hello'
+export function fn(){
+    console.log('----')
+}
+/*b.js*/
+import { message,fn } from './a.js'
+export let count = 5;
+console.log(fn) // [Function] 函数由于变量提升
+setTimeout(() => {
+    console.log(message); // 异步此时已经链接完成
+}, 0);
+```
+
+ESM `import` 时候会做预处理就是对依赖关系进行分析
+
+ESM 内部有 `module map` ，记录每个 module 状态，循环引用时候 b 中去再 `import a ` 时候，此时的 a 的状态是 `fetching` 是不做处理的，继续执行，就 a 就什么都没引用。但是注意函数可以被提升
 
 
 
@@ -158,5 +269,5 @@ require 的模块加载机制
 
 https://www.teqng.com/2021/08/06/%E6%B7%B1%E5%85%A5%E5%88%86%E6%9E%90-javascript-%E6%A8%A1%E5%9D%97%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8/
 
-
+https://zhuanlan.zhihu.com/p/322529692
 
